@@ -26,7 +26,12 @@ public abstract class BaseActivity extends AppCompatActivity {
         protected abstract void initView();
 
         protected abstract int getLayoutRes();
+       private  Toast mToast;
         public void showToast(String content){
-        Toast.makeText(getBaseContext(),content,Toast.LENGTH_SHORT).show();
+            if (mToast == null) {
+                mToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+            }
+            mToast.setText(content);
+            mToast.show();
      }
 }
