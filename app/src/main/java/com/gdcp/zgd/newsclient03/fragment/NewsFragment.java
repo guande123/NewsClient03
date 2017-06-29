@@ -1,8 +1,15 @@
 package com.gdcp.zgd.newsclient03.fragment;
 
+import android.content.Intent;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.daimajia.slider.library.SliderLayout;
+import com.daimajia.slider.library.SliderTypes.BaseSliderView;
+import com.daimajia.slider.library.SliderTypes.TextSliderView;
 import com.gdcp.zgd.newsclient03.R;
+import com.gdcp.zgd.newsclient03.activity.NewsDetailActivity;
 import com.gdcp.zgd.newsclient03.adapter.NewsAdapter;
 import com.gdcp.zgd.newsclient03.entity.NewsEntity;
 import com.gdcp.zgd.newsclient03.entity.URLManager;
@@ -12,6 +19,8 @@ import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest;
+
+import java.util.List;
 
 /**
  * Created by yls on 2017/6/29.
@@ -38,6 +47,18 @@ public class NewsFragment extends BaseFragment{
 
     @Override
     public void initListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // 用户点击的新闻
+                NewsEntity.ResultBean newsBean = (NewsEntity.ResultBean)
+                        parent.getItemAtPosition(position);
+
+                Intent intent = new Intent(mActivity, NewsDetailActivity.class);
+                intent.putExtra("news", newsBean);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -80,11 +101,40 @@ public class NewsFragment extends BaseFragment{
             return;
         }
         // （1）显示轮播图
+        List<NewsEntity.ResultBean.AdsBean> ads
+                = newsDatas.getResult().get(0).getAds();
 
-                // （2）显示新闻列表
-                NewsAdapter newsAdapter = new NewsAdapter(
+        // 有轮播图广告
+        if (ads != null && ads.size() > 0) {
+            View headerView = View.inflate(mActivity, R.layout.list_header, null);
+            SliderLayout sliderLayout = (SliderLayout)
+                    headerView.findViewById(R.id.slider_layout);
+
+            for (int i = 0; i < ads.size(); i++) {
+                // 一则广告数据
+                NewsEntity.ResultBean.AdsBean adBean = ads.get(i);
+
+                TextSliderView sliderView = new TextSliderView(mActivity);
+                sliderView.description(adBean.getTitle()).image(adBean.getImgsrc());
+                // 添加子界面
+                sliderLayout.addSlider(sliderView);
+                // 设置点击事件
+                sliderView.setOnSliderClickListener(new BaseSliderView.OnSliderClickListener() {
+                    @Override
+                    public void onSliderClick(BaseSliderView slider) {
+                        showToast(slider.getDescription());
+                    }
+                });
+            }
+            // 添加列表头部布局
+            listView.addHeaderView(headerView);
+        }
+
+        // （2）显示新闻列表
+        NewsAdapter newsAdapter = new NewsAdapter(
                 mActivity, newsDatas.getResult());
-                listView.setAdapter(newsAdapter);
+        listView.setAdapter(newsAdapter);
+
 
     }
 }
